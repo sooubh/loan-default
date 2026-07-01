@@ -231,9 +231,9 @@ with st.sidebar:
         "Risk Decision Threshold (%)",
         min_value=0.0,
         max_value=100.0,
-        value=93.8,
+        value=50.0,
         step=0.1,
-        help="The probability threshold above which a loan is classified as a Default. Since the training dataset is highly imbalanced (~93.8% defaults), evaluative risk is measured relative to this base rate by default."
+        help="The probability threshold above which a loan is classified as a Default. If using the new balanced model from the updated notebook, leave it at 50.0%. If using the old unbalanced model, slide this to 93.8% (the dataset base rate)."
     )
     
     st.markdown("---")

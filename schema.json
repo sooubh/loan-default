@@ -1,0 +1,300 @@
+{
+  "categorical": {
+    "gender": [
+      "Female",
+      "Male",
+      "Other"
+    ],
+    "education": [
+      "Graduate",
+      "HighSchool",
+      "Other",
+      "PostGraduate"
+    ],
+    "marital_status": [
+      "Divorced",
+      "Married",
+      "Single"
+    ],
+    "employment_type": [
+      "Business",
+      "Farmer",
+      "Salaried",
+      "SelfEmployed",
+      "Unemployed"
+    ],
+    "loan_purpose": [
+      "Agri",
+      "Business",
+      "Education",
+      "Home",
+      "Personal",
+      "Vehicle"
+    ],
+    "loan_product": [
+      "Secured",
+      "Unsecured"
+    ],
+    "repayment_status": [
+      "Active",
+      "Closed",
+      "Overdue",
+      "WrittenOff"
+    ],
+    "loan_source_type": [
+      "New",
+      "Repeat",
+      "TopUp"
+    ],
+    "state": [
+      "Bihar",
+      "Gujarat",
+      "Karnataka",
+      "Kerala",
+      "Madhya Pradesh",
+      "Maharashtra",
+      "Rajasthan",
+      "Tamil Nadu",
+      "Telangana",
+      "Uttar Pradesh"
+    ],
+    "district": [
+      "Ahmedabad",
+      "Bengaluru",
+      "Bhagalpur",
+      "Bhopal",
+      "Chennai",
+      "Coimbatore",
+      "Gaya",
+      "Gwalior",
+      "Hubballi",
+      "Hyderabad",
+      "Indore",
+      "Jaipur",
+      "Jodhpur",
+      "Kanpur",
+      "Kochi",
+      "Lucknow",
+      "Madurai",
+      "Mumbai",
+      "Mysuru",
+      "Nagpur",
+      "Nashik",
+      "Patna",
+      "Pune",
+      "Surat",
+      "Thiruvananthapuram",
+      "Udaipur",
+      "Vadodara",
+      "Varanasi",
+      "Warangal"
+    ],
+    "city": [
+      "Ahmedabad",
+      "Bengaluru",
+      "Bhagalpur",
+      "Bhopal",
+      "Chennai",
+      "Coimbatore",
+      "Gaya",
+      "Gwalior",
+      "Hubballi",
+      "Hyderabad",
+      "Indore",
+      "Jaipur",
+      "Jodhpur",
+      "Kanpur",
+      "Kochi",
+      "Lucknow",
+      "Madurai",
+      "Mumbai",
+      "Mysuru",
+      "Nagpur",
+      "Nashik",
+      "Patna",
+      "Pune",
+      "Surat",
+      "Thiruvananthapuram",
+      "Udaipur",
+      "Vadodara",
+      "Varanasi",
+      "Warangal"
+    ],
+    "urban_rural_flag": [
+      "Rural",
+      "SemiUrban",
+      "Urban"
+    ],
+    "branch_code": [
+      "CENTRAL",
+      "EAST",
+      "NORTH",
+      "SOUTH",
+      "WEST"
+    ],
+    "branch_region": [
+      "CentralZone",
+      "EastZone",
+      "NorthZone",
+      "SouthZone",
+      "WestZone"
+    ],
+    "population_density_band": [
+      "High",
+      "Low",
+      "Medium"
+    ],
+    "economic_activity_type": [
+      "Agri",
+      "MSME",
+      "Mixed",
+      "Salaried"
+    ],
+    "channel": [
+      "Branch",
+      "Digital",
+      "Field",
+      "Partner"
+    ],
+    "has_mortgage": [
+      "No",
+      "Yes"
+    ],
+    "has_dependents": [
+      "No",
+      "Yes"
+    ],
+    "has_cosigner": [
+      "No",
+      "Yes"
+    ]
+  },
+  "numerical": {
+    "age": {
+      "min": 21.0,
+      "max": 70.0,
+      "median": 39.0,
+      "is_int": true
+    },
+    "employment_length_months": {
+      "min": 1.0,
+      "max": 282.0,
+      "median": 45.0,
+      "is_int": true
+    },
+    "annual_income": {
+      "min": 12000.0,
+      "max": 621000.0,
+      "median": 69000.0,
+      "is_int": true
+    },
+    "monthly_income": {
+      "min": 1000.0,
+      "max": 51750.0,
+      "median": 5750.0,
+      "is_int": true
+    },
+    "existing_emi": {
+      "min": 500.0,
+      "max": 94286.0,
+      "median": 4421.5,
+      "is_int": true
+    },
+    "debt_to_income": {
+      "min": 0.02,
+      "max": 0.839,
+      "median": 0.263,
+      "is_int": false
+    },
+    "credit_score": {
+      "min": 352.0,
+      "max": 900.0,
+      "median": 708.0,
+      "is_int": true
+    },
+    "credit_history_length_months": {
+      "min": 8.0,
+      "max": 379.0,
+      "median": 113.0,
+      "is_int": true
+    },
+    "delinquency_count": {
+      "min": 0.0,
+      "max": 8.0,
+      "median": 1.0,
+      "is_int": true
+    },
+    "past_default_flag": {
+      "min": 0.0,
+      "max": 1.0,
+      "median": 0.0,
+      "is_int": true
+    },
+    "loan_amount": {
+      "min": 50000.0,
+      "max": 2800000.0,
+      "median": 328000.0,
+      "is_int": true
+    },
+    "loan_term_months": {
+      "min": 12.0,
+      "max": 72.0,
+      "median": 36.0,
+      "is_int": true
+    },
+    "interest_rate": {
+      "min": 6.0,
+      "max": 32.05,
+      "median": 14.75,
+      "is_int": false
+    },
+    "emi_amount": {
+      "min": 1000.0,
+      "max": 201076.0,
+      "median": 9394.0,
+      "is_int": true
+    },
+    "first_emi_default_flag": {
+      "min": 0.0,
+      "max": 1.0,
+      "median": 0.0,
+      "is_int": true
+    },
+    "pincode": {
+      "min": 110079.0,
+      "max": 799985.0,
+      "median": 451730.5,
+      "is_int": true
+    },
+    "service_area_cluster": {
+      "min": 1.0,
+      "max": 40.0,
+      "median": 21.0,
+      "is_int": true
+    },
+    "distance_to_branch_km": {
+      "min": 0.5,
+      "max": 39.8,
+      "median": 11.4,
+      "is_int": false
+    },
+    "area_default_rate": {
+      "min": 0.02,
+      "max": 0.521,
+      "median": 0.191,
+      "is_int": false
+    },
+    "district_risk_score": {
+      "min": 0.05,
+      "max": 0.95,
+      "median": 0.512,
+      "is_int": false
+    },
+    "state_risk_score": {
+      "min": 0.05,
+      "max": 0.95,
+      "median": 0.48,
+      "is_int": false
+    }
+  }
+}

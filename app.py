@@ -7,8 +7,17 @@ import os
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.impute import SimpleImputer
 import sklearn.compose._column_transformer as _ct
-import shap
-import plotly.graph_objects as go
+try:
+    import shap
+    HAS_SHAP = True
+except ImportError:
+    HAS_SHAP = False
+
+try:
+    import plotly.graph_objects as go
+    HAS_PLOTLY = True
+except ImportError:
+    HAS_PLOTLY = False
 
 # Inject shim to handle backward-compatibility issue with older scikit-learn versions
 if not hasattr(_ct, "_RemainderColsList"):
@@ -590,61 +599,68 @@ with col_result:
             
             # --- SHAP EXPLAINABILITY INTEGRATION ---
             with st.expander("🔍 Explain Prediction Risk Factors", expanded=True):
-                try:
-                    # 1. Preprocess row & handle sparse matrix
-                    X_preprocessed = model.preprocess.transform(row)
-                    if hasattr(X_preprocessed, "toarray"):
-                        X_preprocessed = X_preprocessed.toarray()
-                        
-                    # 2. Initialize and run TreeExplainer
-                    explainer = shap.TreeExplainer(model.model)
-                    raw_shap_values = explainer.shap_values(X_preprocessed)
-                    
-                    # 3. Shape Extraction for Class 1 (Default Risk)
-                    if isinstance(raw_shap_values, list):
-                        # RandomForest (returns list of arrays for each class)
-                        shap_contribs = raw_shap_values[1][0]
-                    elif len(raw_shap_values.shape) == 3:
-                        # 3D Array case
-                        shap_contribs = raw_shap_values[0, :, 1]
-                    else:
-                        # XGBoost (usually returns 2D array or 1D array depending on version/explainer)
-                        shap_contribs = raw_shap_values[0] if len(raw_shap_values.shape) == 2 else raw_shap_values
-                        
-                    # 4. Feature Names Extraction
-                    feature_names = model.preprocess.get_feature_names_out()
-                    
-                    # 5. Map preprocessed names back to clean readable names
-                    clean_names = []
-                    for name in feature_names:
-                        if name.startswith("num__"):
-                            clean_names.append(name.replace("num__", "").replace("_", " ").title())
-                        elif name.startswith("cat__"):
-                            raw_cat = name.replace("cat__", "")
-                            matched = False
-                            for col in schema['categorical'].keys():
-                                if raw_cat.startswith(col + "_"):
-                                    cat_val = raw_cat[len(col)+1:]
-                                    clean_names.append(f"{col.replace('_', ' ').title()}: {cat_val}")
-                                    matched = True
-                                    break
-                            if not matched:
-                                clean_names.append(raw_cat.replace("_", " ").title())
-                        else:
-                            clean_names.append(name)
+                if not HAS_SHAP:
+                    st.warning("⚠️ **SHAP explainability package is not yet installed or failed to build.**")
+                    st.info("The application is fully functional! To view default risk factor analysis, Streamlit Cloud needs to finish building the `shap` library (this can take a few minutes after the first deploy). You can view build logs by clicking 'Manage app' in the bottom-right corner of your Streamlit dashboard.")
+                elif not HAS_PLOTLY:
+                    st.warning("⚠️ **Plotly visualization library is not installed.**")
+                    st.info("Please verify that `plotly` is listed in requirements.txt.")
+                else:
+                    try:
+                        # 1. Preprocess row & handle sparse matrix
+                        X_preprocessed = model.preprocess.transform(row)
+                        if hasattr(X_preprocessed, "toarray"):
+                            X_preprocessed = X_preprocessed.toarray()
                             
-                    # 6. Plot premium Plotly visualization
-                    fig = plot_shap_plotly(clean_names, shap_contribs, top_n=10)
-                    st.plotly_chart(fig, use_container_width=True)
-                    
-                    # 7. Add interpretation text
-                    st.markdown("""
-                    * **Red Bars** represent factors that increased the default risk probability.
-                    * **Green Bars** represent factors that decreased the default risk probability.
-                    * The size of the bar corresponds to the magnitude of the feature's influence.
-                    """)
-                except Exception as shap_err:
-                    st.error(f"Could not compute SHAP explanations: {shap_err}")
+                        # 2. Initialize and run TreeExplainer
+                        explainer = shap.TreeExplainer(model.model)
+                        raw_shap_values = explainer.shap_values(X_preprocessed)
+                        
+                        # 3. Shape Extraction for Class 1 (Default Risk)
+                        if isinstance(raw_shap_values, list):
+                            # RandomForest (returns list of arrays for each class)
+                            shap_contribs = raw_shap_values[1][0]
+                        elif len(raw_shap_values.shape) == 3:
+                            # 3D Array case
+                            shap_contribs = raw_shap_values[0, :, 1]
+                        else:
+                            # XGBoost (usually returns 2D array or 1D array depending on version/explainer)
+                            shap_contribs = raw_shap_values[0] if len(raw_shap_values.shape) == 2 else raw_shap_values
+                            
+                        # 4. Feature Names Extraction
+                        feature_names = model.preprocess.get_feature_names_out()
+                        
+                        # 5. Map preprocessed names back to clean readable names
+                        clean_names = []
+                        for name in feature_names:
+                            if name.startswith("num__"):
+                                clean_names.append(name.replace("num__", "").replace("_", " ").title())
+                            elif name.startswith("cat__"):
+                                raw_cat = name.replace("cat__", "")
+                                matched = False
+                                for col in schema['categorical'].keys():
+                                    if raw_cat.startswith(col + "_"):
+                                        cat_val = raw_cat[len(col)+1:]
+                                        clean_names.append(f"{col.replace('_', ' ').title()}: {cat_val}")
+                                        matched = True
+                                        break
+                                if not matched:
+                                    clean_names.append(raw_cat.replace("_", " ").title())
+                            else:
+                                clean_names.append(name)
+                                
+                        # 6. Plot premium Plotly visualization
+                        fig = plot_shap_plotly(clean_names, shap_contribs, top_n=10)
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # 7. Add interpretation text
+                        st.markdown("""
+                        * **Red Bars** represent factors that increased the default risk probability.
+                        * **Green Bars** represent factors that decreased the default risk probability.
+                        * The size of the bar corresponds to the magnitude of the feature's influence.
+                        """)
+                    except Exception as shap_err:
+                        st.error(f"Could not compute SHAP explanations: {shap_err}")
             
         except Exception as e:
             st.error(f"Prediction failed. There might be a structural mismatch with the loaded model model: {e}")

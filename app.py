@@ -5,6 +5,13 @@ import joblib
 import json
 import os
 from sklearn.base import BaseEstimator, ClassifierMixin
+import sklearn.compose._column_transformer as _ct
+
+# Inject shim to handle backward-compatibility issue with older scikit-learn versions
+if not hasattr(_ct, "_RemainderColsList"):
+    class _RemainderColsList:
+        pass
+    _ct._RemainderColsList = _RemainderColsList
 
 # 1. Custom Class Definition for Pickle Deserialization
 # Since the model is saved in the notebook as a __main__.WrappedModel instance,

@@ -7,6 +7,8 @@ import os
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.impute import SimpleImputer
 import sklearn.compose._column_transformer as _ct
+import shap
+import plotly.graph_objects as go
 
 # Inject shim to handle backward-compatibility issue with older scikit-learn versions
 if not hasattr(_ct, "_RemainderColsList"):
@@ -56,6 +58,37 @@ class WrappedModel(BaseEstimator, ClassifierMixin):
         return self.model.predict(self.preprocess.transform(X))
     def predict_proba(self, X):
         return self.model.predict_proba(self.preprocess.transform(X))
+
+def plot_shap_plotly(names, values, top_n=10):
+    df_shap = pd.DataFrame({"Feature": names, "Impact": values})
+    df_shap["AbsImpact"] = df_shap["Impact"].abs()
+    
+    # Sort and take top N
+    df_top = df_shap.sort_values(by="AbsImpact", ascending=True).tail(top_n)
+    
+    colors = ["#ef4444" if val >= 0 else "#10b981" for val in df_top["Impact"]]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=df_top["Feature"],
+        x=df_top["Impact"],
+        orientation="h",
+        marker_color=colors,
+        hovertemplate="<b>%{y}</b><br>SHAP Impact: %{x:.4f}<extra></extra>"
+    ))
+    
+    fig.update_layout(
+        title="<b>Top Feature Contributions to Risk</b>",
+        xaxis_title="SHAP Value (Positive increases risk, Negative reduces risk)",
+        yaxis_title="Features",
+        template="plotly_dark",
+        margin=dict(l=20, r=20, t=50, b=40),
+        height=350 + top_n * 15,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Outfit, sans-serif")
+    )
+    return fig
 
 # Set page configuration with a premium look
 st.set_page_config(
@@ -554,6 +587,64 @@ with col_result:
                 
             st.markdown("#### Probability Spectrum")
             st.progress(float(prob))
+            
+            # --- SHAP EXPLAINABILITY INTEGRATION ---
+            with st.expander("🔍 Explain Prediction Risk Factors", expanded=True):
+                try:
+                    # 1. Preprocess row & handle sparse matrix
+                    X_preprocessed = model.preprocess.transform(row)
+                    if hasattr(X_preprocessed, "toarray"):
+                        X_preprocessed = X_preprocessed.toarray()
+                        
+                    # 2. Initialize and run TreeExplainer
+                    explainer = shap.TreeExplainer(model.model)
+                    raw_shap_values = explainer.shap_values(X_preprocessed)
+                    
+                    # 3. Shape Extraction for Class 1 (Default Risk)
+                    if isinstance(raw_shap_values, list):
+                        # RandomForest (returns list of arrays for each class)
+                        shap_contribs = raw_shap_values[1][0]
+                    elif len(raw_shap_values.shape) == 3:
+                        # 3D Array case
+                        shap_contribs = raw_shap_values[0, :, 1]
+                    else:
+                        # XGBoost (usually returns 2D array or 1D array depending on version/explainer)
+                        shap_contribs = raw_shap_values[0] if len(raw_shap_values.shape) == 2 else raw_shap_values
+                        
+                    # 4. Feature Names Extraction
+                    feature_names = model.preprocess.get_feature_names_out()
+                    
+                    # 5. Map preprocessed names back to clean readable names
+                    clean_names = []
+                    for name in feature_names:
+                        if name.startswith("num__"):
+                            clean_names.append(name.replace("num__", "").replace("_", " ").title())
+                        elif name.startswith("cat__"):
+                            raw_cat = name.replace("cat__", "")
+                            matched = False
+                            for col in schema['categorical'].keys():
+                                if raw_cat.startswith(col + "_"):
+                                    cat_val = raw_cat[len(col)+1:]
+                                    clean_names.append(f"{col.replace('_', ' ').title()}: {cat_val}")
+                                    matched = True
+                                    break
+                            if not matched:
+                                clean_names.append(raw_cat.replace("_", " ").title())
+                        else:
+                            clean_names.append(name)
+                            
+                    # 6. Plot premium Plotly visualization
+                    fig = plot_shap_plotly(clean_names, shap_contribs, top_n=10)
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # 7. Add interpretation text
+                    st.markdown("""
+                    * **Red Bars** represent factors that increased the default risk probability.
+                    * **Green Bars** represent factors that decreased the default risk probability.
+                    * The size of the bar corresponds to the magnitude of the feature's influence.
+                    """)
+                except Exception as shap_err:
+                    st.error(f"Could not compute SHAP explanations: {shap_err}")
             
         except Exception as e:
             st.error(f"Prediction failed. There might be a structural mismatch with the loaded model model: {e}")

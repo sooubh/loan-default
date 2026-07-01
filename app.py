@@ -86,7 +86,7 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
     }
     </style>
-""", unsafe_index=True)
+""", unsafe_allow_html=True)
 
 # 2. Main Title Header
 st.markdown('<div class="main-title">🏦 Loan Default Risk Predictor</div>', unsafe_allow_html=True)

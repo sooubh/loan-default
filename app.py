@@ -5,6 +5,7 @@ import joblib
 import json
 import os
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.impute import SimpleImputer
 import sklearn.compose._column_transformer as _ct
 
 # Inject shim to handle backward-compatibility issue with older scikit-learn versions
@@ -12,6 +13,33 @@ if not hasattr(_ct, "_RemainderColsList"):
     class _RemainderColsList:
         pass
     _ct._RemainderColsList = _RemainderColsList
+
+def patch_imputer(obj):
+    if isinstance(obj, SimpleImputer):
+        if not hasattr(obj, '_fill_dtype'):
+            if obj.strategy == 'most_frequent' or (hasattr(obj, 'statistics_') and len(obj.statistics_) > 0 and isinstance(obj.statistics_[0], str)):
+                obj._fill_dtype = np.dtype('O')
+            else:
+                obj._fill_dtype = np.dtype('float64')
+        if not hasattr(obj, '_fit_dtype'):
+            if obj.strategy == 'most_frequent' or (hasattr(obj, 'statistics_') and len(obj.statistics_) > 0 and isinstance(obj.statistics_[0], str)):
+                obj._fit_dtype = np.dtype('O')
+            else:
+                obj._fit_dtype = np.dtype('float64')
+        return
+        
+    if isinstance(obj, (np.ndarray, pd.DataFrame, pd.Series, str, int, float, bool)) or obj is None:
+        return
+        
+    if hasattr(obj, '__dict__'):
+        for k, v in list(obj.__dict__.items()):
+            patch_imputer(v)
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        for item in obj:
+            patch_imputer(item)
+    elif isinstance(obj, dict):
+        for v in list(obj.values()):
+            patch_imputer(v)
 
 # 1. Custom Class Definition for Pickle Deserialization
 # Since the model is saved in the notebook as a __main__.WrappedModel instance,
@@ -185,7 +213,9 @@ if not model_exists:
 # Load the model
 @st.cache_resource
 def load_model():
-    return joblib.load(MODEL_PATH)
+    m = joblib.load(MODEL_PATH)
+    patch_imputer(m)
+    return m
 
 try:
     model = load_model()

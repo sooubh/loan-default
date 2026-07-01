@@ -226,6 +226,17 @@ with st.sidebar:
     )
     
     st.markdown("---")
+    st.markdown("### 🎯 Decision Boundaries")
+    threshold_pct = st.slider(
+        "Risk Decision Threshold (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=93.8,
+        step=0.1,
+        help="The probability threshold above which a loan is classified as a Default. Since the training dataset is highly imbalanced (~93.8% defaults), evaluative risk is measured relative to this base rate by default."
+    )
+    
+    st.markdown("---")
     st.markdown("### 📊 Model Status")
     if model_exists:
         st.success("Model Status: Loaded Successfully")
@@ -236,6 +247,9 @@ with st.sidebar:
     st.markdown("### 📈 Performance Metrics (Typical)")
     st.metric(label="Model ROC-AUC", value="~87.4%", delta="+0.8% vs Baseline")
     st.metric(label="Accuracy", value="~83.2%", delta="+1.2% vs Baseline")
+    
+    st.markdown("---")
+    st.warning("⚠️ **Dataset Imbalance Warning:** The training set contains **93.8% Default cases** (14,073 defaults vs 927 non-defaults). Because of this extreme skew, the model predicts high probability of default for almost all profiles. Adjust the Risk Decision Threshold slider above to change the classification boundary.")
     
     st.markdown("---")
     st.info("Developed for IDBI Loan Default Prediction Hackathon.")
@@ -569,16 +583,18 @@ with col_result:
         
         # Predict using model
         try:
-            pred = model.predict(row)[0]
             prob = model.predict_proba(row)[0, 1]
             
+            # Use Risk Decision Threshold (user controlled)
+            is_default = prob >= (threshold_pct / 100.0)
+            
             # Display premium visual card based on default risk level
-            if pred == 1:
+            if is_default:
                 st.markdown(f"""
                     <div class="result-card-default">
-                        <h3>⚠️ HIGH RISK OF DEFAULT (Default Prediction: {int(pred)})</h3>
+                        <h3>⚠️ HIGH RISK OF DEFAULT</h3>
                         <p style="font-size: 1.15rem; margin-bottom: 8px;">
-                            The model indicates a high likelihood of this borrower defaulting on the loan.
+                            The predicted probability of default ({prob * 100:.2f}%) is greater than or equal to your risk tolerance threshold ({threshold_pct}%).
                         </p>
                         <h4 style="margin: 0; font-size: 1.4rem;">Default Probability: {prob * 100:.2f}%</h4>
                     </div>
@@ -586,9 +602,9 @@ with col_result:
             else:
                 st.markdown(f"""
                     <div class="result-card-safe">
-                        <h3>✅ LOW RISK / APPROVED (Default Prediction: {int(pred)})</h3>
+                        <h3>✅ LOW RISK / APPROVED</h3>
                         <p style="font-size: 1.15rem; margin-bottom: 8px;">
-                            The borrower profile demonstrates strong financial health and credit compliance.
+                            The predicted probability of default ({prob * 100:.2f}%) is less than your risk tolerance threshold ({threshold_pct}%).
                         </p>
                         <h4 style="margin: 0; font-size: 1.4rem;">Default Probability: {prob * 100:.2f}%</h4>
                     </div>
